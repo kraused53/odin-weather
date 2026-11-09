@@ -1,0 +1,27 @@
+button {
+  all: unset;
+  cursor: pointer;
+  padding: 20px;
+  background-color: lightgray;
+  box-shadow: 0px 0px 5px black;
+  border-radius: 2rem;
+
+  font-size: 2rem;
+  font-weight: bold;
+  place-self: center;
+  text-align: center;
+}
+
+button:hover {
+  box-shadow: 0px 0px 10px black;
+}
+
+button:active {
+  background-color: darkgray;
+  box-shadow: 5px 5px 5px black inset;
+}
+
+#search-results-submit-button {
+  padding: 20px;
+  place-self: center;
+}

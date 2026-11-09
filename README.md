@@ -1,48 +1,19 @@
-# odin-template
-A skeleton HTML/CSS/JavaScript template for use in The Odin Project projects
+# Weather App
 
-## To setup:
+Here I have created a Weather App using HTML, CSS, and Javascript. This was done as a project for the The Odin Project curriculum. It uses the open-meteo api for both geolocation and weather reporting.
 
-Run these to initialize NPM modules and install plugins
-```bash
-npm init -y --init-type=module
-npm install --save-dev webpack webpack-cli
-npm install --save-dev html-webpack-plugin
-npm install --save-dev style-loader css-loader
-npm install --save-dev html-loader
-npm install --save-dev webpack-dev-server
-```
+The user can search for their current location, and select the nearest result. The user is then given a report of the current, hourly, and daily weather for the selected location. The user should only have to set their unit preference once, as it is stored in local storage between sessions.
 
-Open package.json and update the scripts section:
-```JSON
-"scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack --config webpack.prod.js",
-    "dev": "webpack serve --open --config webpack.dev.js",
-    "deploy": "git subtree push --prefix dist origin gh-pages"
-},
-```
+## Fututre Steps
 
-Commands:
+- [ ] Make it look better...
+- [ ] Add support for smaller screens
+- [ ] Add ability for user to save location searches
+- [ ] Add automatic updateing to results page (15 min. interval)
 
+## Screen Shots
 
-This will build the production version of the webpage and store it inside dist/
-```bash
-npm run build
-```
-
-
-This will build the development version of the webpage and store it inside dist/
-Then, it will start and open a development server.
-```bash
-npm run dev
-```
-
-To deploy to gh-pages:
-```bash
-npm run build
-git checkout gh-pages && git merge main --no-edit
-git add dist -f && git commit -m "Deployment commit"
-git subtree push --prefix dist origin gh-pages
-git checkout main
-```
+<img src="./documentation/images/homepage.png" alt="Home Page" width="800">
+<img src="./documentation/images/search-1.png" alt="Search Reults" width="800">
+<img src="./documentation/images/search-2.png" alt="Search Reults Continued" width="800">
+<img src="./documentation/images/result.png" alt="A full weather report" width="800">

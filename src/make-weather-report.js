@@ -4,14 +4,23 @@ import {
   getIconTitle,
   getThermometerIcon,
   getWindIcon,
+  getSunriseIcon,
+  getSunsetIcon,
 } from "./get-icon";
 import { getWeatherReport } from "./weather-api";
+import { parseISO, format } from "date-fns";
+
+import "./css/weather-report.css";
 
 /* Weather Screen */
 export async function makeWeatherScreen(city) {
   clearMain();
 
-  const report = await getWeatherReport(city.latitude, city.longitude);
+  const report = await getWeatherReport(
+    city.latitude,
+    city.longitude,
+    city.timezone,
+  );
 
   /* Divs */
   const reportDiv = document.createElement("div");
@@ -19,13 +28,13 @@ export async function makeWeatherScreen(city) {
 
   const infoDiv = makeInfoDiv(city);
   const hoursDiv = makeHoursDiv(report);
-  const currentDiv = makeCurrentDiv(report);
+  const todayDiv = makeTodayDiv(report);
   const weekDiv = makeWeekDiv(report);
 
   /* Pack */
   reportDiv.appendChild(infoDiv);
   reportDiv.appendChild(hoursDiv);
-  reportDiv.appendChild(currentDiv);
+  reportDiv.appendChild(todayDiv);
   reportDiv.appendChild(weekDiv);
 
   const main = document.querySelector("main");
@@ -45,8 +54,12 @@ function makeInfoDiv(city) {
 
   const info = document.createElement("p");
   info.id = "report-info";
-  info.className = "report-data";
+  info.className = "report-div";
   info.textContent = `${city.name}`;
+  if (Object.hasOwn(city, "admin1")) {
+    info.textContent += `, ${city.admin1}`;
+  }
+  info.textContent += `\n[${city.country_code}]`;
   console.log(city);
   infoDiv.appendChild(infoTitle);
   infoDiv.appendChild(info);
@@ -54,32 +67,28 @@ function makeInfoDiv(city) {
   return infoDiv;
 }
 
-/* Hours Div */
-function makeHoursDiv(report) {
-  const hoursDiv = document.createElement("div");
-  hoursDiv.id = "hours-div";
-  hoursDiv.className = "report-div";
+/* Today Div */
+function makeTodayDiv(report) {
+  const todayDiv = document.createElement("div");
+  todayDiv.id = "today-div";
+  todayDiv.className = "report-div";
 
-  return hoursDiv;
-}
-
-/* Current Div */
-function makeCurrentDiv(report) {
-  const currentDiv = document.createElement("div");
-  currentDiv.id = "current-div";
-  currentDiv.className = "report-div";
+  const todayTitle = document.createElement("p");
+  todayTitle.id = "today-title";
+  todayTitle.textContent = "Today's Weather";
 
   const iconDiv = makeIconDiv(report);
-  const currentTempDiv = makeCurrentTempDiv(report);
+  const tempDiv = makeTempDiv(report);
   const windDiv = makeWindDiv(report);
   const sunDiv = makeSunDiv(report);
 
-  currentDiv.appendChild(iconDiv);
-  currentDiv.appendChild(currentTempDiv);
-  currentDiv.appendChild(windDiv);
-  currentDiv.appendChild(sunDiv);
+  todayDiv.appendChild(todayTitle);
+  todayDiv.appendChild(iconDiv);
+  todayDiv.appendChild(tempDiv);
+  todayDiv.appendChild(windDiv);
+  todayDiv.appendChild(sunDiv);
 
-  return currentDiv;
+  return todayDiv;
 }
 
 function makeIconDiv(report) {
@@ -102,7 +111,7 @@ function makeIconDiv(report) {
   return iconDiv;
 }
 
-function makeCurrentTempDiv(report) {
+function makeTempDiv(report) {
   const tempDiv = document.createElement("div");
   tempDiv.id = "temp-div";
   tempDiv.className = "report-div";
@@ -113,7 +122,7 @@ function makeCurrentTempDiv(report) {
   // Current Temp
   const currentTempDiv = document.createElement("div");
   currentTempDiv.id = "current-temp-div";
-  currentTempDiv.className = "temp-data-div";
+  currentTempDiv.className = "report-data-div";
 
   const currentTempTitle = document.createElement("p");
   currentTempTitle.id = "current-temp-title";
@@ -131,7 +140,7 @@ function makeCurrentTempDiv(report) {
   // High Temp
   const highTempDiv = document.createElement("div");
   highTempDiv.id = "high-temp-div";
-  highTempDiv.className = "temp-data-div";
+  highTempDiv.className = "report-data-div";
 
   const highTempTitle = document.createElement("p");
   highTempTitle.id = "high-temp-title";
@@ -146,7 +155,7 @@ function makeCurrentTempDiv(report) {
   // Low Temp
   const lowTempDiv = document.createElement("div");
   lowTempDiv.id = "low-temp-div";
-  lowTempDiv.className = "temp-data-div";
+  lowTempDiv.className = "report-data-div";
 
   const lowTempTitle = document.createElement("p");
   lowTempTitle.id = "low-temp-title";
@@ -178,16 +187,162 @@ function makeWindDiv(report) {
   windDiv.id = "wind-div";
   windDiv.className = "report-div";
 
+  // Icon
+  const iconDiv = document.createElement("div");
+  iconDiv.id = "wind-icon-div";
+  iconDiv.className = "report-data-div";
+
+  const iconTitle = document.createElement("p");
+  iconTitle.id = "wind-icon-title";
+  iconTitle.className = "report-title";
+  iconTitle.textContent = "Wind";
+
   const windIcon = getWindIcon();
 
-  windDiv.appendChild(windIcon);
+  iconDiv.appendChild(windIcon);
+  iconDiv.appendChild(iconTitle);
+
+  // Speed
+  const speedDiv = document.createElement("div");
+  speedDiv.id = "wind-speed-div";
+  speedDiv.className = "report-data-div";
+
+  const speedTitle = document.createElement("p");
+  speedTitle.id = "wind-speed-title";
+  speedTitle.className = "report-title";
+  speedTitle.textContent = "Speed";
+
+  const speed = document.createElement("p");
+  speed.id = "wind-speed";
+  speed.className = "report-data";
+  speed.textContent = `${report.current.wind_speed_10m} ${report.current_units.wind_speed_10m}`;
+
+  speedDiv.appendChild(speedTitle);
+  speedDiv.appendChild(speed);
+
+  // Gusts
+  const gustsDiv = document.createElement("div");
+  gustsDiv.id = "wind-gusts-div";
+  gustsDiv.className = "report-data-div";
+
+  const gustsTitle = document.createElement("p");
+  gustsTitle.id = "wind-gusts-title";
+  gustsTitle.className = "report-title";
+  gustsTitle.textContent = "Gusts";
+
+  const gusts = document.createElement("p");
+  gusts.id = "wind-gusts";
+  gusts.className = "report-data";
+  gusts.textContent = `${report.current.wind_gusts_10m} ${report.current_units.wind_gusts_10m}`;
+
+  gustsDiv.appendChild(gustsTitle);
+  gustsDiv.appendChild(gusts);
+
+  // Direction
+  const directionDiv = document.createElement("div");
+  directionDiv.id = "wind-direction-div";
+  directionDiv.className = "report-data-div";
+
+  const directionTitle = document.createElement("p");
+  directionTitle.id = "wind-direction-title";
+  directionTitle.className = "report-title";
+  directionTitle.textContent = "Direction";
+
+  const direction = document.createElement("p");
+  direction.id = "wind-direction";
+  direction.className = "report-data";
+  direction.textContent = `${report.current.wind_direction_10m} ${report.current_units.wind_direction_10m}`;
+
+  directionDiv.appendChild(directionTitle);
+  directionDiv.appendChild(direction);
+
+  // Pack
+  windDiv.appendChild(iconDiv);
+  windDiv.appendChild(speedDiv);
+  windDiv.appendChild(gustsDiv);
+  windDiv.appendChild(directionDiv);
+
   return windDiv;
 }
 
 function makeSunDiv(report) {
+  // Get time data
+  const sr = report.daily.sunrise[0];
+  const sr_time = parseISO(sr);
+  const ss = report.daily.sunset[0];
+  const ss_time = parseISO(ss);
+
   const sunDiv = document.createElement("div");
   sunDiv.id = "sun-div";
   sunDiv.className = "report-div";
+
+  // Sunrise
+  const riseDiv = document.createElement("div");
+  riseDiv.id = "sunrise-div";
+  riseDiv.className = "report-sun-div";
+
+  const riseIconDiv = document.createElement("div");
+  riseIconDiv.id = "sunrise-icon-div";
+  riseIconDiv.className = "report-data-div";
+
+  const riseIcon = getSunriseIcon();
+
+  riseIconDiv.appendChild(riseIcon);
+
+  const riseTimeDiv = document.createElement("div");
+  riseTimeDiv.id = "sunrise-time-div";
+  riseTimeDiv.className = "report-data-div";
+
+  const riseTimeTitle = document.createElement("p");
+  riseTimeTitle.className = "report-title";
+  riseTimeTitle.textContent = "Sunrise";
+
+  const riseTime = document.createElement("p");
+  riseTime.id = "sunrise-time";
+  riseTime.className = "report-data";
+  riseTime.textContent = format(sr_time, "h:mm a");
+
+  riseTimeDiv.appendChild(riseTimeTitle);
+  riseTimeDiv.appendChild(riseTime);
+
+  riseDiv.appendChild(riseIconDiv);
+  riseDiv.appendChild(riseTimeDiv);
+
+  // Sunset
+  const setDiv = document.createElement("div");
+  setDiv.id = "sunset-div";
+  setDiv.className = "report-sun-div";
+
+  const setIconDiv = document.createElement("div");
+  setIconDiv.id = "sunset-icon-div";
+  setIconDiv.className = "report-data-div";
+
+  const setIcon = getSunsetIcon();
+
+  setIconDiv.appendChild(setIcon);
+
+  const setTimeDiv = document.createElement("div");
+  setTimeDiv.id = "sunset-time-div";
+  setTimeDiv.className = "report-data-div";
+
+  const setTimeTitle = document.createElement("p");
+  setTimeTitle.className = "report-title";
+  setTimeTitle.textContent = "Sunset";
+
+  const setTime = document.createElement("p");
+  setTime.id = "sunset-time";
+  setTime.className = "report-data";
+  setTime.textContent = format(ss_time, "h:mm a");
+
+  setTimeDiv.appendChild(setTimeTitle);
+  setTimeDiv.appendChild(setTime);
+
+  setDiv.appendChild(setIconDiv);
+  setDiv.appendChild(setTimeDiv);
+
+  // Pack
+  sunDiv.appendChild(riseDiv);
+  sunDiv.appendChild(setDiv);
 
   return sunDiv;
 }
@@ -198,147 +353,183 @@ function makeWeekDiv(report) {
   weekDiv.id = "week-div";
   weekDiv.className = "report-div";
 
+  const weekTitle = document.createElement("p");
+  weekTitle.id = "week-title";
+  weekTitle.textContent = "This Week";
+
+  const weekData = makeWeekCards(report);
+
+  // Pack
+  weekDiv.appendChild(weekTitle);
+  weekDiv.appendChild(weekData);
+
   return weekDiv;
 }
 
-async function makeWeatherScreenOld(city) {
-  clearMain();
+function makeWeekCards(report) {
+  const weekDataDiv = document.createElement("div");
+  weekDataDiv.id = "week-data-div";
+  weekDataDiv.className = "report-div";
 
-  const report = await getWeatherReport(city.latitude, city.longitude);
+  for (let i = 0; i < 7; i++) {
+    weekDataDiv.appendChild(
+      makeDayCard(
+        report.daily.time[i],
+        report.daily.weather_code[i],
+        report.daily.temperature_2m_max[i],
+        report.daily.temperature_2m_min[i],
+        report.daily_units.temperature_2m_max,
+      ),
+    );
+  }
 
-  /* Divs */
-  const reportDiv = document.createElement("div");
-  reportDiv.id = "report-div";
+  return weekDataDiv;
+}
 
-  const iconDiv = document.createElement("div");
-  iconDiv.id = "icon-div";
+function makeDayCard(dayDate, icon, dayHigh, dayLow, dayTempUnits) {
+  const dayDiv = document.createElement("div");
+  dayDiv.id = crypto.randomUUID();
+  dayDiv.className = "day-div";
 
-  const tempDiv = document.createElement("div");
-  tempDiv.id = "temp-div";
-  tempDiv.className = "report-div";
+  // Divs
+  const dayIconDiv = document.createElement("div");
+  dayIconDiv.id = "icon-div-" + dayDiv.id;
+  dayIconDiv.className = "day-icon-div";
 
-  const humDiv = document.createElement("div");
-  humDiv.id = "hum-div";
-  humDiv.className = "report-div";
+  const dayTempDiv = document.createElement("div");
+  dayTempDiv.id = "temp-div-" + dayDiv.id;
+  dayTempDiv.className = "day-temp-div";
 
-  const precipDiv = document.createElement("div");
-  precipDiv.id = "precip-div";
-  precipDiv.className = "report-div";
+  const dayHighDiv = document.createElement("div");
+  dayHighDiv.id = "high-div-" + dayDiv.id;
+  dayHighDiv.className = "report-data-div";
 
-  const windDiv = document.createElement("div");
-  windDiv.id = "wind-div";
-  windDiv.className = "report-div";
+  const dayLowDiv = document.createElement("div");
+  dayLowDiv.id = "low-div-" + dayDiv.id;
+  dayLowDiv.className = "report-data-div";
 
-  const controlsDiv = document.createElement("div");
-  controlsDiv.id = "controls-div";
+  const dayDateDiv = document.createElement("div");
+  dayDateDiv.id = "date-div-" + dayDiv.id;
+  dayDateDiv.className = "day-date-div";
 
-  /* Titles */
-  const tempTitle = document.createElement("p");
-  tempTitle.id = "temp-title";
-  tempTitle.className = "report-title";
-  tempTitle.textContent = "Temperature";
+  // Titles
+  const dayHighTitle = document.createElement("p");
+  dayHighTitle.classList.add("day-title");
+  dayHighTitle.textContent = "High";
 
-  const humTitle = document.createElement("p");
-  humTitle.id = "hum-title";
-  humTitle.className = "report-title";
-  humTitle.textContent = "Humidity";
+  const dayLowTitle = document.createElement("p");
+  dayLowTitle.classList.add("day-title");
+  dayLowTitle.textContent = "Low";
 
-  const precipTitle = document.createElement("p");
-  precipTitle.id = "precip-title";
-  precipTitle.className = "report-title";
-  precipTitle.textContent = "Preciptitaion";
+  // Data
+  const dayIcon = getIconSVG(icon, 1);
+  dayIcon.id = "icon-" + dayDiv.id;
+  dayIcon.classList.add("small-icon");
 
-  const windSpeedTitle = document.createElement("p");
-  windSpeedTitle.id = "wind-speed-title";
-  windSpeedTitle.className = "report-title";
-  windSpeedTitle.textContent = "Wind Speed";
+  const dateOfDay = document.createElement("div");
+  dateOfDay.id = "date-" + dayDiv.id;
+  dateOfDay.textContent = format(parseISO(dayDate), "MMM do, yyyy");
+  dateOfDay.classList.add("day-date");
 
-  const windDirTitle = document.createElement("p");
-  windDirTitle.id = "wind-dir-title";
-  windDirTitle.className = "report-title";
-  windDirTitle.textContent = "Wind Direction";
+  const high = document.createElement("div");
+  high.id = "high-" + dayDiv.id;
+  high.textContent = `${dayHigh} ${dayTempUnits}`;
+  high.classList.add("day-high");
 
-  const iconTitle = document.createElement("p");
-  iconTitle.id = "icon-title";
-  iconTitle.textContent = getIconTitle(report.current.weather_code);
+  const low = document.createElement("div");
+  low.id = "low-" + dayDiv.id;
+  low.textContent = `${dayLow} ${dayTempUnits}`;
+  low.classList.add("day-low");
 
-  /* Data */
-  const temp = document.createElement("p");
-  temp.id = "report-temp";
-  temp.className = "report-data";
-  temp.textContent = `${report.current.temperature_2m} ${report.current_units.temperature_2m}`;
+  // Pack
+  dayIconDiv.appendChild(dayIcon);
+  dayDiv.appendChild(dayIconDiv);
 
-  const hum = document.createElement("p");
-  hum.id = "report-hum";
-  hum.className = "report-data";
-  hum.textContent = `${report.current.relative_humidity_2m} ${report.current_units.relative_humidity_2m}`;
+  dayLowDiv.appendChild(dayLowTitle);
+  dayLowDiv.appendChild(low);
+  dayHighDiv.appendChild(dayHighTitle);
+  dayHighDiv.appendChild(high);
+  dayTempDiv.appendChild(dayLowDiv);
+  dayTempDiv.appendChild(dayHighDiv);
+  dayDiv.appendChild(dayTempDiv);
 
-  const precip = document.createElement("p");
-  precip.id = "report-precip";
-  precip.className = "report-data";
-  precip.textContent = `${report.current.precipitation_probability} ${report.current_units.precipitation_probability}`;
+  dayDateDiv.appendChild(dateOfDay);
+  dayDiv.appendChild(dayDateDiv);
 
-  const windSpeed = document.createElement("p");
-  windSpeed.id = "report-wind-speed";
-  windSpeed.className = "report-data";
-  windSpeed.textContent = `${report.current.wind_speed_10m} ${report.current_units.wind_speed_10m}`;
+  return dayDiv;
+}
 
-  const windDir = document.createElement("p");
-  windDir.id = "report-wind-dir";
-  windDir.className = "report-data";
-  windDir.textContent = `${report.current.wind_direction_10m} ${report.current_units.wind_direction_10m}`;
+/* Hours */
+function makeHoursDiv(report) {
+  const hoursDiv = document.createElement("div");
+  hoursDiv.id = "hours-div";
+  hoursDiv.className = "report-div";
 
-  const icon = document.createElement("div");
-  icon.id = "icon";
-  icon.append(getIconSVG(report.current.weather_code, report.current.is_day));
+  const hoursTitle = document.createElement("p");
+  hoursTitle.id = "report-hours-title";
+  hoursTitle.className = "report-title";
+  hoursTitle.textContent = `A Look At Today`;
 
-  /* Controls */
+  const hoursData = makeHourCards(report);
 
-  const saveButton = document.createElement("button");
-  saveButton.id = "save-button";
-  saveButton.type = "button";
-  saveButton.className = "report-button";
-  saveButton.textContent = "Save";
-  saveButton.addEventListener("click", () => {
-    console.log("Oops, check back later");
-  });
+  hoursDiv.appendChild(hoursTitle);
+  hoursDiv.appendChild(hoursData);
+  return hoursDiv;
+}
 
-  const unitsButton = document.createElement("button");
-  unitsButton.id = "units-button";
-  unitsButton.type = "button";
-  unitsButton.className = "report-button";
-  unitsButton.textContent = "Units";
-  unitsButton.addEventListener("click", () => {
-    console.log("Oops, check back later");
-  });
+function makeHourCards(report) {
+  const hourDataDiv = document.createElement("div");
+  hourDataDiv.id = "hour-data-div";
+  hourDataDiv.className = "report-div";
 
-  /* Pack */
-  iconDiv.appendChild(icon);
-  iconDiv.appendChild(iconTitle);
-  reportDiv.appendChild(iconDiv);
+  for (let i = 0; i < 24; i++) {
+    hourDataDiv.appendChild(
+      makeHourCard(
+        report.hourly.weather_code[i],
+        report.hourly.is_day[i],
+        report.hourly.time[i],
+        report.hourly.temperature_2m[i],
+        report.hourly_units.temperature_2m,
+      ),
+    );
+  }
 
-  tempDiv.appendChild(tempTitle);
-  tempDiv.appendChild(temp);
-  reportDiv.appendChild(tempDiv);
+  return hourDataDiv;
+}
 
-  humDiv.appendChild(humTitle);
-  humDiv.appendChild(hum);
-  reportDiv.appendChild(humDiv);
+function makeHourCard(
+  hourIconCode,
+  hourIsDay,
+  hourTime,
+  hourTemp,
+  hourTempUnits,
+) {
+  // Parse Data
+  const ht = parseISO(hourTime);
 
-  precipDiv.appendChild(precipTitle);
-  precipDiv.appendChild(precip);
-  reportDiv.appendChild(precipDiv);
+  const hourCard = document.createElement("div");
+  hourCard.id = crypto.randomUUID();
+  hourCard.className = "hour-div";
 
-  windDiv.appendChild(windSpeedTitle);
-  windDiv.appendChild(windSpeed);
-  windDiv.appendChild(windDirTitle);
-  windDiv.appendChild(windDir);
-  reportDiv.appendChild(windDiv);
+  // Data
+  const hourIcon = getIconSVG(hourIconCode, hourIsDay);
+  hourIcon.id = "icon-" + hourCard.id;
+  hourIcon.classList.add("tiny-icon");
 
-  controlsDiv.appendChild(saveButton);
-  controlsDiv.appendChild(unitsButton);
-  reportDiv.appendChild(controlsDiv);
+  const hourTimeData = document.createElement("div");
+  hourTimeData.id = "time-data-" + hourCard.id;
+  hourTimeData.className = "hour-time-data";
+  hourTimeData.textContent = format(ht, "h:mm a");
 
-  const main = document.querySelector("main");
-  main.appendChild(reportDiv);
+  const hourTempData = document.createElement("div");
+  hourTempData.id = "temp-data-" + hourCard.id;
+  hourTempData.className = "hour-temp-data";
+  hourTempData.textContent = `${hourTemp} ${hourTempUnits}`;
+
+  // Pack
+  hourCard.appendChild(hourIcon);
+  hourCard.appendChild(hourTempData);
+  hourCard.appendChild(hourTimeData);
+
+  return hourCard;
 }

@@ -1,0 +1,35 @@
+/* Page */
+#page-container {
+  height: 100vh;
+  overflow: hidden;
+
+  background-color: var(--background);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+/* End Page */
+
+/* Main */
+main {
+  flex-grow: 1;
+
+  display: grid;
+  place-items: center;
+
+  overflow: scroll;
+}
+/* End Main */
+
+/* Header */
+header {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0px 0px 10px black;
+  padding: 1rem;
+  z-index: 1;
+  background-color: var(--white);
+}
+/* End Header */

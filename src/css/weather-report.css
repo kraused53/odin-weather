@@ -1,0 +1,230 @@
+#report-div {
+  display: grid;
+  padding: 2rem;
+  gap: 1rem;
+  width: 100%;
+  height: 100%;
+
+  grid-template-columns: 1fr 4fr;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+
+  grid-template-areas:
+    "info today"
+    "hours today"
+    "hours week";
+
+  background-color: var(--white);
+  text-align: center;
+}
+
+.report-div {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  border: 1px solid var(--text);
+  gap: 1rem;
+  background-color: var(--background);
+}
+
+.report-title {
+  font-weight: bold;
+  text-decoration: underline;
+  font-size: 1.75rem;
+}
+
+.report-data {
+  font-size: 1.5rem;
+}
+
+.report-data-div {
+  display: flex;
+  gap: 0.5rem;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+.large-icon {
+  width: 10rem;
+  fill: var(--accent);
+}
+
+.small-icon {
+  width: 5rem;
+  fill: var(--accent);
+}
+
+.tiny-icon {
+  width: 3rem;
+  fill: var(--accent);
+}
+
+/* Today */
+#today-title {
+  grid-column: 1/5;
+  grid-row: 1/2;
+  padding: auto;
+  font-size: 2rem;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+#today-div {
+  grid-area: today;
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: auto 1fr 1fr;
+  border: none;
+  background-color: var(--white);
+}
+
+#icon-div {
+  grid-column: 1/2;
+  grid-row: 2/3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+}
+
+#icon {
+  width: 10rem;
+}
+
+#icon-title {
+  font-size: 2rem;
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+#temp-div {
+  grid-column: 2/5;
+  grid-row: 2/3;
+
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+
+#wind-div {
+  grid-column: 1/3;
+  grid-row: 3/4;
+  flex-direction: row;
+}
+
+#sun-div {
+  grid-column: 3/5;
+  grid-row: 3/4;
+  flex-direction: row;
+}
+
+.report-sun-div {
+  display: flex;
+  justify-content: space-evenly;
+  gap: 2rem;
+}
+/* End Today */
+
+/* Info */
+#info-div {
+  grid-area: info;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  background-color: var(--white);
+  border: none;
+}
+
+#report-info {
+  flex-grow: 1;
+  font-size: 2rem;
+  white-space: pre-line;
+}
+/* End Info */
+
+/* Hours */
+#hours-div {
+  grid-area: hours;
+
+  display: flex;
+  flex-direction: column;
+
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+
+  overflow: hidden;
+  background-color: var(--white);
+  border: none;
+}
+
+#hour-data-div {
+  flex: 1 1 0;
+  height: 0;
+  min-height: 0;
+  max-height: 100%;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: max-content;
+  align-content: start;
+}
+
+.hour-div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  margin: 1rem;
+  gap: 1rem;
+
+  border-radius: 2rem;
+  background-color: var(--white);
+}
+/* End Hours */
+
+/* Week */
+#week-div {
+  grid-area: week;
+  border: none;
+  background-color: var(--white);
+}
+
+#week-data-div {
+  flex-direction: row;
+}
+
+#week-title {
+  padding: auto;
+  font-size: 2rem;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.day-div {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem;
+  margin: 1rem;
+  gap: 1rem;
+
+  border-radius: 2rem;
+  background-color: var(--white);
+}
+
+.day-temp-div {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.day-title {
+  font-weight: bold;
+  text-decoration: underline;
+}
+/* End Week */

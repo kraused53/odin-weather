@@ -1,0 +1,7 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box; /* Ensures padding doesn't affect overall element width */
+  margin: 0;
+  padding: 0;
+}
